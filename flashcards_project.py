@@ -2,5 +2,4 @@
 
 def recebe_arquivo(arq):
     documento = open("arq.txt", "r")
-    for linha in documento:
-        
+    
