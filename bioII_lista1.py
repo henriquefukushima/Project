@@ -27,6 +27,8 @@ print(dado)
 import matplotlib.pyplot as plt
 import csv 
 import numpy as np
+from matplotlib import cm
+from matplotlib import colors
 '''''
 for linha in movimentos:
       print(linha)
@@ -217,6 +219,39 @@ def dens(movimentos, residuo):
         plt.xlabel("Ângulo \u03A8")
         plt.show()
 
+def ramachandran(movimentos, residuo):
+    X = np.arange(-180,180,1)
+    Y = np.arange(-180,180,1)
+    phi = []
+    psi = []
+    x, y = np.meshgrid(np.arange(-180,180,1),np.arange(-180,180,1))
+    if residuo == "G":
+        for linha in movimentos:
+            phi.append(linha[2])
+        for linha in movimentos:
+            psi.append(linha[3])
+        plt.hist2d(phi, psi, bins=(150,150), range=[(-180,180), (-180,180)])
+        plt.axhline(y = 0, linestyle="solid")
+        plt.axvline(x = 0,linestyle="solid")
+        plt.title("Gráfico de Ramachandran para o resíduo Glu-10")
+        plt.xlabel("Ângulo \u03A6")
+        plt.ylabel("Ângulo \u03A8")
+        plt.colorbar(label = "Dados ")
+        plt.show()
+    elif residuo == "L":
+        for linha in movimentos:
+            phi.append(linha[4])
+        for linha in movimentos:
+            psi.append(linha[5])
+        plt.hist2d(phi, psi, bins=(100,100), cmap=cm.gist_rainbow, range=[(-180,180), (-180,180)], norm=colors.LogNorm())
+        plt.axhline(y = 0, linestyle="solid")
+        plt.axvline(x = 0,linestyle="solid")
+        plt.title("Gráfico de Ramachandran para o resíduo Leu-33")
+        plt.xlabel("Ângulo \u03A6")
+        plt.ylabel("Ângulo \u03A8")
+        plt.colorbar(label = "Dados ")
+        plt.show()
+
 
 '''''
 # Criando uma lista de 80 intervalos entre -180 e 180 graus
@@ -244,6 +279,7 @@ def main():
     # Questão: 
 
     questao = input("Digite a letra da questão: ")
+
     if questao == 'a':
         item = input("Digite o item da questão (a): ")
         if item == 'i':
@@ -300,6 +336,9 @@ def main():
         print("Média = " + str(m2_L))
         print("Variância = " + str(var2_L))
     
+    elif questao == "c":
+        residuo = input("Gráfico de Ramachandran para Glu ou Leu? ")
+        ramachandran(movimentos, residuo)
     
 
 '''''
