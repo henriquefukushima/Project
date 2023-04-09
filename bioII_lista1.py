@@ -29,6 +29,7 @@ import csv
 import numpy as np
 from matplotlib import cm
 from matplotlib import colors
+from matplotlib.ticker import NullFormatter
 '''''
 for linha in movimentos:
       print(linha)
@@ -47,10 +48,9 @@ def histograma(movimentos, residuo):
         theta_list = []
         for linha in movimentos:
             theta_list.append(linha[1])
-        counts, bin_edges, patches = plt.hist(theta_list, bins, density = True)
+        counts, bin_edges, patches = plt.hist(theta_list, bins)
         for i, count in enumerate(counts):
             print(f"Bin {i}: {count}")
-        print(counts)
         plt.title("Histograma de valores de \u03B8 entre os átomos C\u03B1-C\u03B2-C\u03B3 do resíduo Phe-11")
         plt.ylabel("Frequência")
         plt.xlabel("Ângulo \u03B8")
@@ -175,7 +175,6 @@ def dens(movimentos, residuo):
 
     pi = 3.141592653589793238462643383279502884
     e = 2.718281828459045
-    x = [-180, -175.5, -171.0, -166.5, -162.0, -157.5, -153.0, -148.5, -144.0, -139.5, -135.0, -130.5, -126.0, -121.5, -117.0, -112.5, -108.0, -103.5, -99.0, -94.5, -90.0, -85.5, -81.0, -76.5, -72.0, -67.5, -63.0, -58.5, -54.0, -49.5, -45.0, -40.5, -36.0, -31.5, -27.0, -22.5, -18.0, -13.5, -9.0, -4.5, 0.0, 4.5, 9.0, 13.5, 18.0, 22.5, 27.0, 31.5, 36.0, 40.5, 45.0, 49.5, 54.0, 58.5, 63.0, 67.5, 72.0, 76.5, 81.0, 85.5, 90.0, 94.5, 99.0, 103.5, 108.0, 112.5, 117.0, 121.5, 126.0, 130.5, 135.0, 139.5, 144.0, 148.5, 153.0, 157.5, 162.0, 166.5, 171.0, 175.5, 180]
     X = np.arange(-180,180,1)
     if residuo == "P":
         dp = desvio_padrao(movimentos, residuo)
@@ -243,7 +242,7 @@ def ramachandran(movimentos, residuo):
             phi.append(linha[4])
         for linha in movimentos:
             psi.append(linha[5])
-        plt.hist2d(phi, psi, bins=(100,100), cmap=cm.gist_rainbow, range=[(-180,180), (-180,180)], norm=colors.LogNorm())
+        plt.hist2d(phi, psi, bins=(100,100), range=[(-180,180), (-180,180)])
         plt.axhline(y = 0, linestyle="solid")
         plt.axvline(x = 0,linestyle="solid")
         plt.title("Gráfico de Ramachandran para o resíduo Leu-33")
@@ -252,8 +251,87 @@ def ramachandran(movimentos, residuo):
         plt.colorbar(label = "Dados ")
         plt.show()
 
+def projecao(movimentos, residuo):
+    x = []
+    y = []
+    if residuo == 'G':
+        for linha in movimentos:
+            x.append(linha[2])
+        for linha in movimentos:
+            y.append(linha[3])
+    elif residuo == 'L':
+        for linha in movimentos:
+            x.append(linha[4])
+        for linha in movimentos:
+            y.append(linha[5])
+        # the random data
 
-'''''
+    nullfmt = NullFormatter()         # no labels
+
+    # definitions for the axes
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    bottom_h = left_h = left + width + 0.02
+
+    rect_scatter = [left, bottom, width, height]
+    rect_histx = [left, bottom_h, width, 0.2]
+    rect_histy = [left_h, bottom, 0.2, height]
+
+    # start with a rectangular Figure
+    plt.figure(1, figsize=(8, 8))
+
+    axScatter = plt.axes(rect_scatter)
+    axHistx = plt.axes(rect_histx)
+    axHisty = plt.axes(rect_histy)
+
+
+    # no labels
+    axHistx.xaxis.set_major_formatter(nullfmt)
+    axHisty.yaxis.set_major_formatter(nullfmt)
+
+    # the scatter plot:
+    axScatter.scatter(x, y)
+
+    # now determine nice limits by hand:
+    binwidth = 0.25
+    xymax = np.max([np.max(np.fabs(x)), np.max(np.fabs(y))])
+    lim = (int(xymax/binwidth) + 1) * binwidth
+
+    axScatter.set_xlim((-lim, lim))
+    axScatter.set_ylim((-lim, lim))
+
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    axHistx.hist(x, bins=bins)
+    axHisty.hist(y, bins=bins, orientation='horizontal')
+
+    axHistx.set_xlim(axScatter.get_xlim())
+    axHisty.set_ylim(axScatter.get_ylim())
+
+    plt.show()
+
+
+def dinamica_temporal(movimentos, residuo):
+    angulos = []
+    tempo = []
+    for linha in movimentos:
+            tempo.append(linha[0])
+    if residuo == 'P':
+        for linha in movimentos:
+            angulos.append(linha[1])
+        plt.plot(tempo, angulos)
+        plt.title('Simulação temporal do ângulo \u03B8 do Phe-11')
+        plt.xlabel('Tempo (ps)')
+        plt.ylabel('Ângulo \u03B8')
+        plt.show()
+    elif residuo == 'G':
+        for linha in movimentos:
+            angulos.append(linha[3])
+        plt.plot(tempo, angulos)
+        plt.title('Simulação temporal do ângulo \u03A8 do Glu-10')
+        plt.xlabel('Tempo (ps)')
+        plt.ylabel('Ângulo \u03A8')
+        plt.show()
+'''''   
 # Criando uma lista de 80 intervalos entre -180 e 180 graus
 i = -180
 list = []
@@ -304,9 +382,12 @@ def main():
         elif item == 'iii':
             residuo = input("Repetir o item(a) para theta(P) ou phi de Glu-10(G)? ")
             if residuo == "P":
-                histograma(movimentos[2251:], residuo)
+                #histograma(movimentos[2251:], residuo)
+                dinamica_temporal(movimentos, residuo)
             elif residuo == "G":
                 histograma(movimentos[2251:], residuo)
+                dinamica_temporal(movimentos, residuo)
+
     
     elif questao == "b":
         residuo1 = "P"
@@ -337,8 +418,13 @@ def main():
         print("Variância = " + str(var2_L))
     
     elif questao == "c":
-        residuo = input("Gráfico de Ramachandran para Glu ou Leu? ")
-        ramachandran(movimentos, residuo)
+        item = input("Escreva o item: ")
+        if item == 'i':
+            residuo = input("Gráfico de Ramachandran para Glu ou Leu? ")
+            ramachandran(movimentos, residuo)
+        elif item == 'ii':
+            residuo = input("Projeção para Glu ou Leu? ")
+            projecao(movimentos, residuo)
     
 
 '''''
